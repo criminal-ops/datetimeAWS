@@ -1,0 +1,113 @@
+Store Date and Time in DynamoDB Using AWS Lambda
+
+
+Step 1: Create a DynamoDB Table
+1. Log in to the AWS Management Console.
+2. Search for DynamoDB.
+3. Click Tables → Create table.
+4. Enter the following details:
+   - Table name: DateTimeTable
+   - Partition key: id
+   - Partition key type: String
+   - Enable Sort key.
+   - Sort key name: String
+   - Sort key type: String
+5. Keep the remaining settings as default.
+6. Click Create table.
+7. Wait until the table status becomes Active.
+Step 2: Create an IAM Role
+1. Search for IAM in the AWS Console.
+2. Click Roles → Create role.
+3. Select AWS service.
+4. Select Lambda.
+5. Click Next.
+6. Search for and select AmazonDynamoDBFullAccess.
+7. Click Next.
+8. Enter the role name:
+   LambdaDynamoDBRole
+9. Click Create role.
+For a production application, use a policy with only the permissions required for the specific table.
+Step 3: Create a Lambda Function
+1. Search for Lambda in the AWS Console.
+2. Click Functions → Create function.
+3. Select Author from scratch.
+4. Enter the following details:
+   - Function name: StoreDateTime
+   - Runtime: Python 3.12 or another available Python runtime.
+   - Architecture: Default.
+   - Execution role: Use an existing role.
+   - Existing role: LambdaDynamoDBRole
+5. Click Create function.
+Step 4: Enter the Lambda Code
+1. Open the StoreDateTime function.
+2. Scroll down to the Code section.
+3. Open lambda_function.py.
+4. Delete the existing code.
+5. Paste the following code:
+
+import boto3
+import datetime
+import uuid
+
+def lambda_handler(event, context):
+    db = boto3.resource('dynamodb')
+    table = db.Table('DateTimeTable')
+
+    now = datetime.datetime.now().isoformat()
+
+    table.put_item(Item={
+        'id': str(uuid.uuid4()),
+        'String': now,
+        'date_time': now
+    })
+
+    return {
+        'statusCode': 200,
+        'body': 'Date and time stored successfully'
+    }
+
+
+6. Click Deploy.
+Important: Paste only the Python code, without the surrounding Markdown backticks.
+Step 5: Configure the Lambda Function
+1. Open the Configuration tab.
+2. Click General configuration.
+3. Click Edit.
+4. Set the timeout to 15 seconds.
+5. Click Save.
+6. Open Configuration → Permissions.
+7. Click the execution role name and verify that the role has permission to write to DynamoDB.
+
+Step 6: Create a Test Event
+1. Return to the Code section.
+2. Click Test.
+3. Select Create new event, if prompted.
+4. Enter the event name:
+   TestDateTime
+5. Enter the following JSON in the event editor:
+   {}
+6. Click Save.
+7. Click Deploy if you made any code changes.
+
+Step 7: Execute the Lambda Function
+1. Click Test.
+2. Wait for the execution result.
+3. Verify that the status is Succeeded.
+Expected output:
+{
+  "statusCode": 200,
+  "body": "Date and time stored successfully"
+}
+
+
+Step 8: Verify the Data in DynamoDB
+1. Open the AWS Console.
+2. Search for DynamoDB.
+3. Click Tables.
+4. Select DateTimeTable.
+5. Click Explore table items.
+6. Refresh the items list.
+7. Verify that the following attributes are present:
+   - id
+   - String
+   - date_time
